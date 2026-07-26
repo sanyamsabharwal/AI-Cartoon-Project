@@ -1,4 +1,7 @@
+import io
+import base64
 import streamlit as st
+import streamlit.components.v1 as components
 import os
 import time
 import requests as http_requests
@@ -8,6 +11,72 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from PIL import Image
+
+def render_image_actions(pil_img, label_name, key_prefix):
+    """Render Download and Clipboard Copy buttons for an image asset."""
+    try:
+        buf = io.BytesIO()
+        pil_img.save(buf, format="PNG")
+        img_bytes = buf.getvalue()
+        b64_str = base64.b64encode(img_bytes).decode("utf-8")
+
+        col_dl, col_cp = st.columns([1, 1])
+        with col_dl:
+            st.download_button(
+                label="⬇️ Download Image",
+                data=img_bytes,
+                file_name=f"{key_prefix}.png",
+                mime="image/png",
+                key=f"dl_{key_prefix}",
+                use_container_width=True
+            )
+        
+        with col_cp:
+            components.html(f"""
+            <button id="cpBtn_{key_prefix}" style="
+                width: 100%;
+                padding: 7px 10px;
+                margin-top: 1px;
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: #ffffff;
+                font-weight: 700;
+                font-size: 0.82rem;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+                transition: all 0.2s ease;
+            ">📋 Copy Image to Clipboard</button>
+            <script>
+            document.getElementById('cpBtn_{key_prefix}').addEventListener('click', async function() {{
+                try {{
+                    const b64 = '{b64_str}';
+                    const binStr = atob(b64);
+                    const len = binStr.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {{
+                        bytes[i] = binStr.charCodeAt(i);
+                    }}
+                    const blob = new Blob([bytes], {{ type: 'image/png' }});
+                    await navigator.clipboard.write([
+                        new ClipboardItem({{ 'image/png': blob }})
+                    ]);
+                    var btn = document.getElementById('cpBtn_{key_prefix}');
+                    btn.innerText = '✅ Image Copied!';
+                    btn.style.background = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+                    setTimeout(function() {{
+                        btn.innerText = '📋 Copy Image to Clipboard';
+                        btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                    }}, 2200);
+                }} catch (err) {{
+                    alert('Clipboard access blocked by browser. Please use the Download Image button next to it!');
+                }}
+            }});
+            </script>
+            """, height=44)
+    except Exception:
+        pass
 
 # Page Config
 st.set_page_config(
@@ -739,6 +808,7 @@ with col_left:
             try:
                 char_img = Image.open(char_asset_path)
                 st.image(char_img, caption=f"Main Character Asset: {character}", width=180)
+                render_image_actions(char_img, character, f"char_{character.replace(' ', '_').lower()}")
             except Exception:
                 pass
         
@@ -802,6 +872,7 @@ with col_right:
                     pil_images.append(img)
                     with img_cols[idx % 3]:
                         st.image(img, caption=f"Product: {file.name[:12]}", width="stretch")
+                        render_image_actions(img, file.name, f"prod_{idx}")
                 except Exception:
                     st.warning(f"Could not load {file.name}")
         elif char_asset_path:
