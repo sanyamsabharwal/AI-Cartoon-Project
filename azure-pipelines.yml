@@ -1,0 +1,137 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Azure Pipelines — AI Character Video Studio (Streamlit)
+# Deploys to: Azure App Service (Linux, Python 3.11)
+#
+# REQUIRED PIPELINE VARIABLES (set in Azure DevOps → Pipelines → Variables):
+#   AZURE_SUBSCRIPTION   : Your Azure service connection name
+#   WEBAPP_NAME          : Your Azure App Service name (e.g. ai-cartoon-studio)
+#   GEMINI_API_KEY       : Your Gemini API key (mark as secret)
+#   OPENROUTER_API_KEY   : Your OpenRouter API key (mark as secret)
+# ─────────────────────────────────────────────────────────────────────────────
+
+trigger:
+  branches:
+    include:
+      - master
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  pythonVersion: '3.11'
+  appServiceName: $(WEBAPP_NAME)
+
+# ─── STAGE 1: Build & Test ────────────────────────────────────────────────────
+stages:
+  - stage: Build
+    displayName: '🔨 Build & Validate'
+    jobs:
+      - job: BuildJob
+        displayName: 'Install Dependencies & Lint'
+        steps:
+
+          # 1. Use Python 3.11
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+              addToPath: true
+            displayName: '🐍 Set up Python $(pythonVersion)'
+
+          # 2. Install dependencies
+          - script: |
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+            displayName: '📦 Install Requirements'
+
+          # 3. Basic syntax check (no pytest needed for Streamlit)
+          - script: |
+              python -m py_compile app.py
+              echo "✅ app.py syntax check passed"
+            displayName: '✅ Syntax Check'
+
+          # 4. Create startup script for Azure App Service
+          - script: |
+              echo "streamlit run app.py --server.port 8000 --server.address 0.0.0.0 --server.headless true" > startup.sh
+              chmod +x startup.sh
+            displayName: '📝 Create Startup Script'
+
+          # 5. Create .env file placeholder (real secrets injected via App Settings)
+          - script: |
+              echo "# Secrets are injected via Azure App Service Application Settings" > .env.production
+              echo "GEMINI_API_KEY=" >> .env.production
+              echo "OPENROUTER_API_KEY=" >> .env.production
+            displayName: '🔒 Prepare Env Placeholder'
+
+          # 6. Archive the app for deployment
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+              replaceExistingArchive: true
+              excludePaths: |
+                **/__pycache__/**
+                **/*.pyc
+                .git/**
+                generated_videos/**
+                .env
+            displayName: '📦 Package App (ZIP)'
+
+          # 7. Publish artifact for deploy stage
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'streamlit-app'
+              publishLocation: 'Container'
+            displayName: '🚀 Publish Build Artifact'
+
+  # ─── STAGE 2: Deploy to Azure App Service ──────────────────────────────────
+  - stage: Deploy
+    displayName: '🌐 Deploy to Azure App Service'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: DeployJob
+        displayName: 'Deploy Streamlit App'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+
+                # 1. Download the build artifact
+                - task: DownloadBuildArtifacts@1
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: 'streamlit-app'
+                    downloadPath: '$(System.ArtifactsDirectory)'
+                  displayName: '⬇️ Download Build Artifact'
+
+                # 2. Deploy ZIP to Azure App Service
+                - task: AzureWebApp@1
+                  inputs:
+                    azureSubscription: '$(AZURE_SUBSCRIPTION)'
+                    appType: 'webAppLinux'
+                    appName: '$(WEBAPP_NAME)'
+                    package: '$(System.ArtifactsDirectory)/streamlit-app/app.zip'
+                    runtimeStack: 'PYTHON|3.11'
+                    startUpCommand: 'streamlit run app.py --server.port 8000 --server.address 0.0.0.0 --server.headless true'
+                  displayName: '🚀 Deploy to Azure App Service'
+
+                # 3. Configure App Settings (inject secrets securely)
+                - task: AzureAppServiceSettings@1
+                  inputs:
+                    azureSubscription: '$(AZURE_SUBSCRIPTION)'
+                    appName: '$(WEBAPP_NAME)'
+                    resourceGroupName: ''
+                    appSettings: |
+                      [
+                        { "name": "GEMINI_API_KEY",      "value": "$(GEMINI_API_KEY)",      "slotSetting": false },
+                        { "name": "OPENROUTER_API_KEY",  "value": "$(OPENROUTER_API_KEY)",  "slotSetting": false },
+                        { "name": "WEBSITES_PORT",       "value": "8000",                   "slotSetting": false },
+                        { "name": "SCM_DO_BUILD_DURING_DEPLOYMENT", "value": "true",        "slotSetting": false }
+                      ]
+                  displayName: '🔑 Set App Service Secrets'
