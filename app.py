@@ -897,84 +897,83 @@ if generate_btn:
     </script>
     """, height=60)
 
-    # ── PHASE 3: Automatic Video Generation ──
-    st.markdown("---")
-    st.markdown("""
-    <div class="result-box" style="border-color: rgba(52, 211, 153, 0.5); margin-top: 0.8rem;">
-        <div class="status-pill">🎥 Automatic Video Generation Started</div>
-        <span class="engine-badge engine-gemini" style="margin-left: 8px;">Gemini Veo 3.1</span>
-        <p style="color: #cbd5e1; font-size: 0.92rem; margin-top: 8px; margin-bottom: 0;">
-            Submitting → Polling → Downloading → Playing. <strong>No manual steps required.</strong>
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.success("✅ Script & Copy-Ready Prompt generated! Click the button above to copy your prompt and paste into Google Flow Studio.")
 
-    progress_area = st.empty()
-    veo_prompt = f"3D animated cinematic shot of {character}, {desc_text}, smooth 60fps motion, vibrant lighting, volumetric atmosphere, detailed character features, 8 seconds."
-    result = generate_and_poll_video(veo_prompt, progress_area)
-
-    if result["status"] == "success":
-        video_path = result["file_path"]
-
-        st.markdown(f"""
-        <div class="video-result-card">
-            <div class="status-pill">✅ Video Generated Successfully!</div>
-            <p style="color: #d1fae5; font-size: 0.95rem; margin-top: 10px; margin-bottom: 0;">
-                Your AI video has been rendered and saved automatically.<br>
-                <code style="color: #6ee7b7;">{video_path}</code>
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.video(video_path)
-
-        with open(video_path, "rb") as vf:
-            video_bytes = vf.read()
-        st.download_button(
-            label="⬇️ Download Video (MP4)",
-            data=video_bytes,
-            file_name=os.path.basename(video_path),
-            mime="video/mp4"
-        )
-
-    elif result["status"] == "quota_error":
-        st.markdown(f"""
-        <div class="quota-warning-box">
-            <div class="status-pill" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.5); color: #fca5a5;">
-                ⚠️ Veo API Quota Exhausted
-            </div>
-            <h4 style="margin-top: 10px; color: #fecdd3;">Video API Rate Limit Reached</h4>
-            <p style="color: #fca5a5; font-size: 0.92rem; margin-bottom: 0;">
-                {result['message']}<br><br>
-                <strong>What to do:</strong> Copy the prompt above and paste it into 
-                <a href="https://labs.google/fx/tools/flow" target="_blank" style="color: #93c5fd;">Google Flow Studio</a>
-                to generate the video manually with your 50 free daily credits.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    elif result["status"] == "timeout":
-        st.markdown(f"""
-        <div class="quota-warning-box" style="border-color: rgba(251, 191, 36, 0.4); background: rgba(251, 191, 36, 0.08);">
-            <div class="status-pill" style="background: rgba(251, 191, 36, 0.2); border-color: rgba(251, 191, 36, 0.5); color: #fbbf24;">
-                ⏰ Generation Timed Out
-            </div>
-            <p style="color: #fde68a; font-size: 0.92rem; margin-top: 10px; margin-bottom: 0;">
-                {result['message']}<br>
-                The video may still be processing. Try again or copy the prompt above into Google Flow.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    else:
-        st.markdown(f"""
-        <div class="quota-warning-box">
-            <div class="status-pill" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.5); color: #fca5a5;">
-                ❌ Generation Error
-            </div>
-            <p style="color: #fca5a5; font-size: 0.92rem; margin-top: 10px; margin-bottom: 0;">
-                {result['message']}<br><br>
-                You can still copy the prompt above and use <a href="https://labs.google/fx/tools/flow" target="_blank" style="color: #93c5fd;">Google Flow Studio</a> manually.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+    # =========================================================================
+    # ── PHASE 3: Automatic Video Generation & Veo Polling (COMMENTED FOR FUTURE USE) ──
+    # Uncomment the block below to re-enable automatic video generation & polling:
+    # =========================================================================
+    # st.markdown("---")
+    # st.markdown("""
+    # <div class="result-box" style="border-color: rgba(52, 211, 153, 0.5); margin-top: 0.8rem;">
+    #     <div class="status-pill">🎥 Automatic Video Generation Started</div>
+    #     <span class="engine-badge engine-gemini" style="margin-left: 8px;">Gemini Veo 3.1</span>
+    #     <p style="color: #cbd5e1; font-size: 0.92rem; margin-top: 8px; margin-bottom: 0;">
+    #         Submitting → Polling → Downloading → Playing. <strong>No manual steps required.</strong>
+    #     </p>
+    # </div>
+    # """, unsafe_allow_html=True)
+    #
+    # progress_area = st.empty()
+    # veo_prompt = f"3D animated cinematic shot of {character}, {desc_text}, smooth 60fps motion, vibrant lighting, volumetric atmosphere, detailed character features, 8 seconds."
+    # result = generate_and_poll_video(veo_prompt, progress_area)
+    #
+    # if result["status"] == "success":
+    #     video_path = result["file_path"]
+    #     st.markdown(f"""
+    #     <div class="video-result-card">
+    #         <div class="status-pill">✅ Video Generated Successfully!</div>
+    #         <p style="color: #d1fae5; font-size: 0.95rem; margin-top: 10px; margin-bottom: 0;">
+    #             Your AI video has been rendered and saved automatically.<br>
+    #             <code style="color: #6ee7b7;">{video_path}</code>
+    #         </p>
+    #     </div>
+    #     """, unsafe_allow_html=True)
+    #     st.video(video_path)
+    #     with open(video_path, "rb") as vf:
+    #         video_bytes = vf.read()
+    #     st.download_button(
+    #         label="⬇️ Download Video (MP4)",
+    #         data=video_bytes,
+    #         file_name=os.path.basename(video_path),
+    #         mime="video/mp4"
+    #     )
+    # elif result["status"] == "quota_error":
+    #     st.markdown(f"""
+    #     <div class="quota-warning-box">
+    #         <div class="status-pill" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.5); color: #fca5a5;">
+    #             ⚠️ Veo API Quota Exhausted
+    #         </div>
+    #         <h4 style="margin-top: 10px; color: #fecdd3;">Video API Rate Limit Reached</h4>
+    #         <p style="color: #fca5a5; font-size: 0.92rem; margin-bottom: 0;">
+    #             {result['message']}<br><br>
+    #             <strong>What to do:</strong> Copy the prompt above and paste it into 
+    #             <a href="https://labs.google/fx/tools/flow" target="_blank" style="color: #93c5fd;">Google Flow Studio</a>
+    #             to generate the video manually with your 50 free daily credits.
+    #         </p>
+    #     </div>
+    #     """, unsafe_allow_html=True)
+    # elif result["status"] == "timeout":
+    #     st.markdown(f"""
+    #     <div class="quota-warning-box" style="border-color: rgba(251, 191, 36, 0.4); background: rgba(251, 191, 36, 0.08);">
+    #         <div class="status-pill" style="background: rgba(251, 191, 36, 0.2); border-color: rgba(251, 191, 36, 0.5); color: #fbbf24;">
+    #             ⏰ Generation Timed Out
+    #         </div>
+    #         <p style="color: #fde68a; font-size: 0.92rem; margin-top: 10px; margin-bottom: 0;">
+    #             {result['message']}<br>
+    #             The video may still be processing. Try again or copy the prompt above into Google Flow.
+    #         </p>
+    #     </div>
+    #     """, unsafe_allow_html=True)
+    # else:
+    #     st.markdown(f"""
+    #     <div class="quota-warning-box">
+    #         <div class="status-pill" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.5); color: #fca5a5;">
+    #             ❌ Generation Error
+    #         </div>
+    #         <p style="color: #fca5a5; font-size: 0.92rem; margin-top: 10px; margin-bottom: 0;">
+    #             {result['message']}<br><br>
+    #             You can still copy the prompt above and use <a href="https://labs.google/fx/tools/flow" target="_blank" style="color: #93c5fd;">Google Flow Studio</a> manually.
+    #         </p>
+    #     </div>
+    #     """, unsafe_allow_html=True)
