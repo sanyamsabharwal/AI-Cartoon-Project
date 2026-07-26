@@ -688,6 +688,7 @@ with col_left:
             ("Normal Video (Story / Comedy / Entertainment)", "Promotion Video (Ad / Marketing / Product Focus)")
         )
         
+        # Main character selection
         character_choice = st.selectbox(
             "Choose Main Character:",
             (
