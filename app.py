@@ -33,20 +33,26 @@ def render_image_actions(pil_img, label_name, key_prefix):
         
         with col_cp:
             components.html(f"""
+            <style>
+                body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; }}
+            </style>
             <button id="cpBtn_{key_prefix}" style="
+                display: block;
                 width: 100%;
-                padding: 7px 10px;
-                margin-top: 1px;
+                padding: 9px 8px;
+                margin: 0;
                 background: linear-gradient(135deg, #10b981, #059669);
                 color: #ffffff;
                 font-weight: 700;
-                font-size: 0.82rem;
-                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-size: 0.85rem;
+                font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
                 border: none;
-                border-radius: 8px;
+                border-radius: 10px;
                 cursor: pointer;
                 box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
                 transition: all 0.2s ease;
+                white-space: nowrap;
+                text-align: center;
             ">📋 Copy Image to Clipboard</button>
             <script>
             document.getElementById('cpBtn_{key_prefix}').addEventListener('click', async function() {{
@@ -74,7 +80,7 @@ def render_image_actions(pil_img, label_name, key_prefix):
                 }}
             }});
             </script>
-            """, height=44)
+            """, height=58)
     except Exception:
         pass
 
