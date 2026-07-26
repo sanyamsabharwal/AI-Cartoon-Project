@@ -23,7 +23,7 @@ def render_image_actions(pil_img, label_name, key_prefix):
         col_dl, col_cp = st.columns([1, 1])
         with col_dl:
             st.download_button(
-                label="⬇️ Download Image",
+                label="⬇️ Download",
                 data=img_bytes,
                 file_name=f"{key_prefix}.png",
                 mime="image/png",
@@ -34,26 +34,32 @@ def render_image_actions(pil_img, label_name, key_prefix):
         with col_cp:
             components.html(f"""
             <style>
-                body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; }}
+                html, body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; height: 100%; }}
+                .cp-btn {{
+                    display: block;
+                    width: 100%;
+                    padding: 8px 4px;
+                    margin: 0;
+                    background: linear-gradient(135deg, #10b981, #059669);
+                    color: #ffffff;
+                    font-weight: 700;
+                    font-size: 0.8rem;
+                    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+                    transition: all 0.2s ease;
+                    white-space: nowrap;
+                    text-align: center;
+                    box-sizing: border-box;
+                }}
+                .cp-btn:hover {{
+                    transform: translateY(-1px);
+                    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
+                }}
             </style>
-            <button id="cpBtn_{key_prefix}" style="
-                display: block;
-                width: 100%;
-                padding: 9px 8px;
-                margin: 0;
-                background: linear-gradient(135deg, #10b981, #059669);
-                color: #ffffff;
-                font-weight: 700;
-                font-size: 0.85rem;
-                font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-                border: none;
-                border-radius: 10px;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
-                transition: all 0.2s ease;
-                white-space: nowrap;
-                text-align: center;
-            ">📋 Copy Image to Clipboard</button>
+            <button id="cpBtn_{key_prefix}" class="cp-btn">📋 Copy Image</button>
             <script>
             document.getElementById('cpBtn_{key_prefix}').addEventListener('click', async function() {{
                 try {{
@@ -69,18 +75,18 @@ def render_image_actions(pil_img, label_name, key_prefix):
                         new ClipboardItem({{ 'image/png': blob }})
                     ]);
                     var btn = document.getElementById('cpBtn_{key_prefix}');
-                    btn.innerText = '✅ Image Copied!';
+                    btn.innerText = '✅ Copied!';
                     btn.style.background = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
                     setTimeout(function() {{
-                        btn.innerText = '📋 Copy Image to Clipboard';
+                        btn.innerText = '📋 Copy Image';
                         btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
                     }}, 2200);
                 }} catch (err) {{
-                    alert('Clipboard access blocked by browser. Please use the Download Image button next to it!');
+                    alert('Clipboard access blocked by browser. Please use the Download button next to it!');
                 }}
             }});
             </script>
-            """, height=58)
+            """, height=65)
     except Exception:
         pass
 
