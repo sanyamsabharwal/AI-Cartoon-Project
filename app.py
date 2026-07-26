@@ -706,6 +706,21 @@ with col_left:
             )
         )
         
+        # Character Asset Mapping
+        CHARACTER_ASSETS = {
+            "Doraemon": "assets/characters/doraemon.png",
+            "Motu Patlu": "assets/characters/motu_patlu.png",
+            "Chacha Chaudhary": "assets/characters/chacha_chaudhary.png",
+            "Shaktimaan": "assets/characters/shaktimaan.png",
+            "Ben 10": "assets/characters/ben_10.png",
+            "Ninja Hattori": "assets/characters/ninja_hattori.png",
+            "Peppa Pig": "assets/characters/peppa_pig.png",
+            "Pokémon": "assets/characters/pokemon.png",
+            "Beyblade": "assets/characters/beyblade.png",
+            "Chota Bheem": "assets/characters/chota_bheem.png",
+        }
+        
+        char_asset_path = None
         if character_choice == "✏️ Add My Own Character":
             custom_char_name = st.text_input(
                 "Enter your animated character name:",
@@ -715,6 +730,17 @@ with col_left:
             character = custom_char_name.strip() if custom_char_name.strip() else "Custom Character"
         else:
             character = character_choice
+            if character in CHARACTER_ASSETS and os.path.exists(CHARACTER_ASSETS[character]):
+                char_asset_path = CHARACTER_ASSETS[character]
+        
+        # Show Main Character Asset Preview if available
+        if char_asset_path:
+            st.markdown(f"**⭐ Main Character Reference Asset Loaded (`{character}`):**")
+            try:
+                char_img = Image.open(char_asset_path)
+                st.image(char_img, caption=f"Main Character Asset: {character}", width=180)
+            except Exception:
+                pass
         
         audio_language = st.selectbox(
             "🔊 Audio / Dialogue Language:",
@@ -731,10 +757,10 @@ with col_left:
         )
 
     with st.container(border=True):
-        st.markdown('<div class="section-header">🖼️ 3. Visual Assets & Reference Images</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">📦 3. Product / Object to Promote (Optional Upload)</div>', unsafe_allow_html=True)
         
-        uploaded_files = st.file_uploader(
-            "Upload reference images for characters, backgrounds, or products (Optional):",
+        uploaded_product_files = st.file_uploader(
+            "Upload image(s) of the product, item, or object to feature in the video (e.g. shoes, beverage can, gadget, car):",
             type=["png", "jpg", "jpeg", "webp"],
             accept_multiple_files=True
         )
@@ -746,30 +772,42 @@ with col_right:
         st.markdown('<div class="section-header">👁️ Studio Live Inspector</div>', unsafe_allow_html=True)
         
         st.markdown(f"""
-        - **Target Character**: `{character}`
+        - **Target Character**: `{character}` (Asset: `{'Loaded' if char_asset_path else 'None'}`)
         - **Video Category**: `{video_type.split('(')[0].strip()}`
         - **Audio Language**: `{audio_language}`
         - **Custom Prompt**: `{'Provided' if custom_description.strip() else 'Default'}`
-        - **Reference Images**: `{len(uploaded_files) if uploaded_files else 0} File(s)`
+        - **Product Uploads**: `{len(uploaded_product_files) if uploaded_product_files else 0} File(s)`
         - **Script Engine**: `{'OpenRouter (Free)' if openrouter_api_key else 'Gemini'}`
         - **Video Engine**: `Gemini Veo 3.1`
         """)
         
-        # Process uploaded images preview
+        # Combine PIL images for multimodal prompt (Character Asset + Product Uploads)
         pil_images = []
-        if uploaded_files:
-            st.markdown("##### 🖼️ Uploaded Asset Previews:")
-            img_cols = st.columns(min(len(uploaded_files), 3))
-            for idx, file in enumerate(uploaded_files):
+        
+        # 1. Main character preset asset
+        if char_asset_path:
+            try:
+                char_img = Image.open(char_asset_path)
+                pil_images.append(char_img)
+            except Exception:
+                pass
+        
+        # 2. Uploaded product/object files preview
+        if uploaded_product_files:
+            st.markdown("##### 📦 Uploaded Product / Object Previews:")
+            img_cols = st.columns(min(len(uploaded_product_files), 3))
+            for idx, file in enumerate(uploaded_product_files):
                 try:
                     img = Image.open(file)
                     pil_images.append(img)
                     with img_cols[idx % 3]:
-                        st.image(img, caption=f"{file.name[:12]}", width="stretch")
+                        st.image(img, caption=f"Product: {file.name[:12]}", width="stretch")
                 except Exception:
                     st.warning(f"Could not load {file.name}")
+        elif char_asset_path:
+            st.info("💡 Main character reference image is loaded automatically from `assets/characters`. Upload product images in Section 3 if you are creating a promo/ad!")
         else:
-            st.info("💡 Tip: Uploading reference images helps the AI capture character details, colors, and art style accurately.")
+            st.info("💡 Tip: Uploading product reference images helps the AI accurately incorporate your product into the scene!")
 
 # ─── HANDLE VIDEO GENERATION — FULLY AUTOMATIC ───
 if generate_btn:
