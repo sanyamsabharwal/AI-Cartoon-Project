@@ -700,6 +700,7 @@ with col_left:
                 "Peppa Pig",
                 "Pokémon",
                 "Beyblade",
+                "Chota Bheem",
                 "✏️ Add My Own Character",
             )
         )
