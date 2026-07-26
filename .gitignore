@@ -1,0 +1,18 @@
+# Environment / Secrets — NEVER commit these
+.env
+*.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Generated videos (large files)
+generated_videos/
+
+# VS Code
+.vscode/
+
+# Streamlit local config
+.streamlit/secrets.toml

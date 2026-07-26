@@ -17,10 +17,19 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Load environment variables
+# Load environment variables — supports both local .env and Streamlit Cloud secrets
 load_dotenv()
 gemini_api_key = os.getenv("GEMINI_API_KEY", "")
 openrouter_api_key = os.getenv("OPENROUTER_API_KEY", "")
+
+# Override with Streamlit Cloud secrets if available (for cloud deployment)
+try:
+    if not gemini_api_key:
+        gemini_api_key = st.secrets.get("GEMINI_API_KEY", "")
+    if not openrouter_api_key:
+        openrouter_api_key = st.secrets.get("OPENROUTER_API_KEY", "")
+except Exception:
+    pass  # Running locally without secrets.toml — that's fine
 
 if not gemini_api_key and not openrouter_api_key:
     st.error("⚠️ Please add GEMINI_API_KEY or OPENROUTER_API_KEY to the .env file!")
